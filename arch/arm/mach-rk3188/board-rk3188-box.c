@@ -1173,6 +1173,35 @@ static struct platform_device rockchip_hdmi_audio = {
 #endif
 /*$_rbox_$_modify_$_zhengyang_end$_20130407_$*/
 
+#if defined CONFIG_TCC_BT_DEV
+static struct tcc_bt_platform_data tcc_bt_platdata = {
+
+    .power_gpio   = { // ldoon
+        .io             =  RK30_PIN3_PC7,
+        .enable         = GPIO_HIGH,
+        .iomux          = {
+            .name       = NULL,
+            },
+        },
+
+    .wake_host_gpio  = { // BT_HOST_WAKE, for bt wakeup host when it is in deep sleep
+        .io         = RK30_PIN3_PD0, // set io to INVALID_GPIO for disable it
+        .enable     = IRQF_TRIGGER_RISING,// set IRQF_TRIGGER_FALLING for falling, set IRQF_TRIGGER_RISING for rising
+        .iomux      = {
+            .name       = NULL,
+        },
+    },
+};
+
+static struct platform_device device_tcc_bt = {
+    .name   = "tcc_bt_dev",
+    .id     = -1,
+    .dev    = {
+        .platform_data = &tcc_bt_platdata,
+        },
+};
+#endif
+
 static struct platform_device *devices[] __initdata = {
 
 #ifdef CONFIG_ION
@@ -1214,6 +1243,10 @@ static struct platform_device *devices[] __initdata = {
 	&rockchip_hdmi_audio,
 #endif
 /*$_rbox_$_modify_$_zhengyang_end$_20130407_$*/
+
+#ifdef CONFIG_TCC_BT_DEV
+        &device_tcc_bt,
+#endif
 };
 
 
