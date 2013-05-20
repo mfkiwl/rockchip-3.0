@@ -1942,18 +1942,18 @@ static void rk30_pm_power_off(void)
 #if defined(CONFIG_REGULATOR_ACT8846)
        if (pmic_is_act8846()) {
                printk("enter dcdet===========\n");
-               if(gpio_get_value (RK30_PIN0_PB2) == GPIO_LOW)
+               /*if(gpio_get_value (RK30_PIN0_PB2) == GPIO_LOW)
                {
                        printk("enter restart===========\n");
                        arm_pm_restart(0, NULL);
                }
-		/** code here may cause tablet cannot boot when shutdown without charger pluged in
+		* code here may cause tablet cannot boot when shutdown without charger pluged in
 		  * and then plug in charger. -- Cody Xie
-               else
-		{
+               else*/
+		//{
 			act8846_device_shutdown();
-		}
-		  */
+		//}
+		  
        }
 #endif
 	gpio_direction_output(POWER_ON_PIN, GPIO_LOW);
