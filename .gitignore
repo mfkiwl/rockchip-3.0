@@ -52,7 +52,7 @@ Untitled Project.*
 #
 !.gitignore
 !.mailmap
-
+!.config
 #
 # Generated include files
 #

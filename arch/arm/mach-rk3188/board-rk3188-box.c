@@ -91,13 +91,6 @@ static struct rk29_keys_button key_button[] = {
 		.active_low = PRESS_LEV_LOW,
 		.wakeup	= 1,
 	},
-	{
-		.desc	= "esc",
-		.code	= KEY_BACK,
-		.adc_value	= 1,
-		.gpio = INVALID_GPIO,
-		.active_low = PRESS_LEV_LOW,
-	},
 };
 struct rk29_keys_platform_data rk29_keys_pdata = {
 	.buttons	= key_button,
@@ -636,7 +629,7 @@ static struct rk_hdmi_platform_data rk_hdmi_pdata = {
 };
 #endif
 #ifdef CONFIG_ION
-#define ION_RESERVE_SIZE        (80 * SZ_1M)
+#define ION_RESERVE_SIZE        (120 * SZ_1M)
 static struct ion_platform_data rk30_ion_pdata = {
 	.nr = 1,
 	.heaps = {
@@ -996,13 +989,13 @@ static struct rfkill_rk_platform_data rfkill_rk_platdata = {
    }, 
 
     .wake_gpio          = { // BT_WAKE, use to control bt's sleep and wakeup
-        .io             = RK30_PIN3_PC6, // set io to INVALID_GPIO for disable it
+        .io             = RK30_PIN3_PC7, // set io to INVALID_GPIO for disable it
         .enable         = GPIO_HIGH,
     },
 
     .wake_host_irq      = { // BT_HOST_WAKE, for bt wakeup host when it is in deep sleep
         .gpio           = {
-            .io         = RK30_PIN0_PA5, // set io to INVALID_GPIO for disable it
+            .io         = RK30_PIN3_PC6, // set io to INVALID_GPIO for disable it
             .enable     = GPIO_LOW,      // set GPIO_LOW for falling, set 0 for rising
             .iomux      = {
                 .name   = NULL,
@@ -1173,6 +1166,35 @@ static struct platform_device rockchip_hdmi_audio = {
 #endif
 /*$_rbox_$_modify_$_zhengyang_end$_20130407_$*/
 
+#if defined CONFIG_TCC_BT_DEV
+static struct tcc_bt_platform_data tcc_bt_platdata = {
+
+    .power_gpio   = { // ldoon
+        .io             =  RK30_PIN3_PC7,
+        .enable         = GPIO_HIGH,
+        .iomux          = {
+            .name       = NULL,
+            },
+        },
+
+    .wake_host_gpio  = { // BT_HOST_WAKE, for bt wakeup host when it is in deep sleep
+        .io         = RK30_PIN3_PD0, // set io to INVALID_GPIO for disable it
+        .enable     = IRQF_TRIGGER_RISING,// set IRQF_TRIGGER_FALLING for falling, set IRQF_TRIGGER_RISING for rising
+        .iomux      = {
+            .name       = NULL,
+        },
+    },
+};
+
+static struct platform_device device_tcc_bt = {
+    .name   = "tcc_bt_dev",
+    .id     = -1,
+    .dev    = {
+        .platform_data = &tcc_bt_platdata,
+        },
+};
+#endif
+
 static struct platform_device *devices[] __initdata = {
 
 #ifdef CONFIG_ION
@@ -1214,6 +1236,10 @@ static struct platform_device *devices[] __initdata = {
 	&rockchip_hdmi_audio,
 #endif
 /*$_rbox_$_modify_$_zhengyang_end$_20130407_$*/
+
+#ifdef CONFIG_TCC_BT_DEV
+        &device_tcc_bt,
+#endif
 };
 
 
@@ -1251,7 +1277,7 @@ static struct rkdisplay_platform_data hdmi_data = {
 	.io_reset_pin 	= RK30_PIN3_PB2,
 };
 
-#if defined(CONFIG_RK1000_TVOUT)
+#if defined(CONFIG_RK1000_TVOUT) || defined(CONFIG_MFD_RK1000)
 static struct rkdisplay_platform_data tv_data = {
 	.property 		= DISPLAY_AUX,
 	.video_source 	= DISPLAY_SOURCE_LCDC0,
@@ -1909,18 +1935,18 @@ static void rk30_pm_power_off(void)
 #if defined(CONFIG_REGULATOR_ACT8846)
        if (pmic_is_act8846()) {
                printk("enter dcdet===========\n");
-               if(gpio_get_value (RK30_PIN0_PB2) == GPIO_LOW)
+               /*if(gpio_get_value (RK30_PIN0_PB2) == GPIO_LOW)
                {
                        printk("enter restart===========\n");
                        arm_pm_restart(0, NULL);
                }
-		/** code here may cause tablet cannot boot when shutdown without charger pluged in
+		* code here may cause tablet cannot boot when shutdown without charger pluged in
 		  * and then plug in charger. -- Cody Xie
-               else
-		{
+               else*/
+		//{
 			act8846_device_shutdown();
-		}
-		  */
+		//}
+		  
        }
 #endif
 	gpio_direction_output(POWER_ON_PIN, GPIO_LOW);
@@ -2024,7 +2050,7 @@ static struct cpufreq_frequency_table dvfs_gpu_table[] = {
 static struct cpufreq_frequency_table dvfs_ddr_table[] = {
 	//{.frequency = 200 * 1000 + DDR_FREQ_SUSPEND,    .index = 950 * 1000},
 	{.frequency = 300 * 1000 + DDR_FREQ_VIDEO,      .index = 1000 * 1000},
-	{.frequency = 400 * 1000 + DDR_FREQ_NORMAL,     .index = 1100 * 1000},
+	{.frequency = 360 * 1000 + DDR_FREQ_NORMAL,     .index = 1100 * 1000},
 	{.frequency = CPUFREQ_TABLE_END},
 };
 
