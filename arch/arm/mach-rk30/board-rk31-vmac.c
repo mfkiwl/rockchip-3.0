@@ -11,7 +11,12 @@ static int rk30_vmac_register_set(void)
 
 static int rk30_rmii_io_init(void)
 {
-	int err;
+	struct regulator *ldo_33 = regulator_get(NULL, "act_ldo5");
+
+	if (ldo_33 == NULL || IS_ERR(ldo_33)){
+		printk("get rmii ldo failed!\n");
+		return -1;
+	}
 
 	iomux_set(RMII_TXEN);
 	iomux_set(RMII_TXD1);
@@ -24,7 +29,14 @@ static int rk30_rmii_io_init(void)
 	iomux_set(RMII_MD);
 	iomux_set(RMII_MDCLK);
 	iomux_set(GPIO3_D2);
+
+	regulator_disable(ldo_33);
+	regulator_put(ldo_33);
+	gpio_direction_output(RK30_PIN3_PD2, GPIO_LOW);
+	gpio_set_value(RK30_PIN3_PD2, GPIO_LOW);
 #if 0
+	int err;
+
 	//iomux_set(GPIO3_B5);
 	iomux_set(GPIO0_C0);
 
@@ -40,8 +52,6 @@ static int rk30_rmii_io_init(void)
 	return 0;
 }
 
-struct regulator *ldo_33;
-
 static int rk30_rmii_io_deinit(void)
 {
 #if 0
@@ -51,15 +61,17 @@ static int rk30_rmii_io_deinit(void)
 	//free
 	gpio_free(PHY_PWR_EN_GPIO);
 #else
+	struct regulator *ldo_33 = regulator_get(NULL, "act_ldo5");
 	regulator_disable(ldo_33);
 	regulator_put(ldo_33);
+	gpio_set_value(RK30_PIN3_PD2, GPIO_LOW);
 #endif
 	return 0;
 }
 
 static int rk30_rmii_power_control(int enable)
 {
-	ldo_33 = regulator_get(NULL, "act_ldo5"); 
+	struct regulator *ldo_33 = regulator_get(NULL, "act_ldo5");
 
 	if (ldo_33 == NULL || IS_ERR(ldo_33)){
 		printk("get rmii ldo failed!\n");
@@ -83,9 +95,10 @@ static int rk30_rmii_power_control(int enable)
 		iomux_set(GPIO3_D2);
 #if 1
 		//regulator_set_voltage(ldo_33, 3300000, 300000);
-                regulator_enable(ldo_33);
-                regulator_put(ldo_33);
-		//gpio_direction_output(RK30_PIN3_PD2, GPIO_LOW);
+		regulator_enable(ldo_33);
+		regulator_put(ldo_33);
+		msleep(500);
+		gpio_direction_output(RK30_PIN3_PD2, GPIO_LOW);
 		gpio_set_value(RK30_PIN3_PD2, GPIO_LOW);
 		msleep(20);
 		gpio_set_value(RK30_PIN3_PD2, GPIO_HIGH);
@@ -97,8 +110,10 @@ static int rk30_rmii_power_control(int enable)
 #endif
 	}else {
 #if 1
-                regulator_disable(ldo_33);
-        	regulator_put(ldo_33);
+		regulator_disable(ldo_33);
+		regulator_put(ldo_33);
+		msleep(500);
+		gpio_set_value(RK30_PIN3_PD2, GPIO_LOW);
 #else
 		gpio_direction_output(PHY_PWR_EN_GPIO, GPIO_LOW);
 		gpio_set_value(PHY_PWR_EN_GPIO, GPIO_LOW);
